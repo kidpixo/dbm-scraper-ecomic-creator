@@ -50,7 +50,7 @@ Case:
 
 Step 4. Assemble the .cbz (recover some code from `chapters_maker.py`)
 
-STATUS : ***DOING*
+STATUS : **DOING**
 
 - Check for each chapter if remote.chapter.page == locale.chapter.page
     - if not: 
