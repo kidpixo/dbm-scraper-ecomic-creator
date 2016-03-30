@@ -2,9 +2,13 @@
 
 This repository goal is to scrape, update and create ecomic (cbz) from dbm.
 
+Merging all the code in bdm.py 
+
 ## Logic 
 
-1. Check the pages+chapters from remote (code actually in `bs4_scrape_chapters.py` ) 
+Step 1. Check the pages+chapters from remote (code actually in `bs4_scrape_chapters.py` )
+
+STATUS : **DONE**
 
 in/out
 
@@ -12,9 +16,11 @@ in/out
 - OUTPUT -> chapter + pages list , {'chapter' : pages } pyton dict maybe?
 
 
-2. Check the local data (recover some code from `chapters_maker.py`) :
+Step 2. Check the local data (recover some code from `chapters_maker.py`) :
 
 Case 1. :
+
+STATUS : **DONE**
 
 - INPUT  <- directory with .cbz files
 - OUTPUT -> list of .cbz files (== chapters) and pages within like in 1.OUTPUT
@@ -22,11 +28,13 @@ Case 1. :
 
 Case 2. : 
 
+STATUS : WTF? Is this useful?
+
 - INPUT  <- directory with images
 - OUTPUT -> lst of local pages
 
 
-3. Compare remote and locale lists
+Step 3. Compare remote and locale lists
 
 Case:
 
@@ -38,7 +46,7 @@ Case:
         - using python request try first the page.png , if exception try page.jpg
 
 
-4. Assemble the .cbz (recover some code from `chapters_maker.py`)
+Step 4. Assemble the .cbz (recover some code from `chapters_maker.py`)
 
 - Check for each chapter if remote.chapter.page == locale.chapter.page
     - if not: 

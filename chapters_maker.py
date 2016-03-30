@@ -18,7 +18,7 @@ for chapter,ini,end in zip(np.arange(1,chapters.size+1),chapters,chapters_plus_o
     # create an end page
     if not os.path.isfile('images/end_ch_{ch}.png'.format(ch=chapter)):
         os.system("convert  -background black -fill white -gravity Center -font komika_text/KOMTXKBI.ttf  -size 600x861 label:'End of\n Chapter #{ch}' images/end_ch_{ch}.png".format(ch=chapter))
-        tozip.append('images/end_ch_{ch}.png'.format(ch=chapter))
+    tozip.append('images/end_ch_{ch}.png'.format(ch=chapter))
 
     print 'creating archive for chapter %s' % chapter
 
