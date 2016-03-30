@@ -39,7 +39,7 @@ def locale_scraper(verbose=False):
     for ch_filename in files:
         with zipfile.ZipFile('comics/'+ch_filename, mode='r') as zf:
             # getting only the files with path 'images/four digits'
-            chapter_dict[ch_filename] = [f for f in zf.namelist() if re.match(r'.*/\d{4}\..*', f)]
+            chapter_dict[ch_filename] = sorted( [f for f in zf.namelist() if re.match(r'.*/\d{4}\..*', f)] )
         if verbose:
             print 'chapter %s : ' % ch_filename
             print chapter_dict[ch_filename]
@@ -56,22 +56,6 @@ def extract_digits(text):
 
 # compare remote and locale
 
-## Testing stuff
-rem = remote_scraper(verbose=False)
-loc = locale_scraper(verbose=False)
-# ch = '8'
-# print rem_dict[ch]
-# # int
-# # [168, 169, 170, 171, 172, 173, 174, 175, 176, 177, 178, 179]
-# print loc_dict[ch+'.cbz']
-# # strings
-# ['images/0168.png', 'images/0169.png', 'images/0170.png', 'images/0171.png', 'images/0172.png', 'images/0173.png', 'images/0174.png', 'images/0175.png', 'images/0176.png', 'images/0177.png', 'images/0178.png', 'images/0179.png']
-# loc_ch = [int(extract_digits(l)) for l in  loc_dict[ch+'.cbz']]
-# # intersection of the two lists
-# set(rem_dict[ch]).intersection(set(loc_ch))
-# # difference of the two lists
-# set(rem_dict[ch])- set(loc_ch)
-
 def rem_loc_compare(rem_dict,loc_dict,verbose=False):
     rem_loc_diff = {}
     for k in rem_dict.keys():
@@ -82,4 +66,61 @@ def rem_loc_compare(rem_dict,loc_dict,verbose=False):
             if verbose:
                 print 'remmote/locacle difference for ch.%s: %s ' % (k,tmp_diff)
     return rem_loc_diff
+
+
+def download_remote(to_download):
+
+    import requests
+    import shutil
+
+    for element in to_download:
+
+        filename = str(rem_loc_diff_flat[0]).zfill(4)
+        extension = '.png'
+        baseurl = 'http://www.dragonball-multiverse.com/en/pages/final/' + filename
+
+        res = requests.get(baseurl + extension, stream=True)
+
+        try:
+            res.raise_for_status()
+        except Exception as exc:
+            print('Png file does not exist, tryng jpg. Error code : %s' % (exc))
+            del res
+            extension = '.jpg'
+            res = requests.get(baseurl + extension, stream=True)
+
+        with open('images/'+filename+extension, 'wb') as out_file:
+            shutil.copyfileobj(res.raw, out_file)
+
+        print '%s downloaded and saved' % ( filename+extension )
+        del res
+
+## Testing stuff
+
+# get remote status
+rem = remote_scraper(verbose=False)
+
+# get locale status
+loc = locale_scraper(verbose=False)
+
+# compare the two
+rem_loc_diff = rem_loc_compare(rem,loc,verbose=True)
+print rem_loc_diff
+# {'51': [1161]}
+:w
+
+# flatten the dictionary of lists :
+rem_loc_diff_flat = [item for sublist in rem_loc_diff.values() for item in sublist]
+
+download_remote(rem_loc_diff_flat)
+
+import os
+
+for ch in rem_loc_diff.keys():
+    print loc[k+'.cbz']
+    print rem[k]
+    if not os.path.isfile('images/%s.cbz' % k) :
+        create file based on rem[k] list
+    else:
+        append missing file from rem_loc_diff[k]
 
