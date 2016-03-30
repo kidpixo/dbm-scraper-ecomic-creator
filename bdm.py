@@ -27,7 +27,7 @@ def remote_scraper(verbose=False):
 
     return chapter_dict
 
-def locale_scraper(verbose=False)
+def locale_scraper(verbose=False):
 
     import os
     import zipfile
@@ -45,4 +45,41 @@ def locale_scraper(verbose=False)
             print chapter_dict[ch_filename]
             print '-'*20
 
-        return chapter_dict
+    return chapter_dict
+
+def extract_digits(text):
+    m = re.match('.*?(\d{1,}).*?',text)
+    if m:
+        return m.group(1)
+    else:
+        return text
+
+# compare remote and locale
+
+## Testing stuff
+rem = remote_scraper(verbose=False)
+loc = locale_scraper(verbose=False)
+# ch = '8'
+# print rem_dict[ch]
+# # int
+# # [168, 169, 170, 171, 172, 173, 174, 175, 176, 177, 178, 179]
+# print loc_dict[ch+'.cbz']
+# # strings
+# ['images/0168.png', 'images/0169.png', 'images/0170.png', 'images/0171.png', 'images/0172.png', 'images/0173.png', 'images/0174.png', 'images/0175.png', 'images/0176.png', 'images/0177.png', 'images/0178.png', 'images/0179.png']
+# loc_ch = [int(extract_digits(l)) for l in  loc_dict[ch+'.cbz']]
+# # intersection of the two lists
+# set(rem_dict[ch]).intersection(set(loc_ch))
+# # difference of the two lists
+# set(rem_dict[ch])- set(loc_ch)
+
+def rem_loc_compare(rem_dict,loc_dict,verbose=False):
+    rem_loc_diff = {}
+    for k in rem_dict.keys():
+        loc_ch = [int(extract_digits(l)) for l in  loc_dict[k+'.cbz']]
+        tmp_diff = list(set(rem_dict[k])- set(loc_ch))
+        if len(tmp_diff) > 0:
+            rem_loc_diff[k] = tmp_diff
+            if verbose:
+                print 'remmote/locacle difference for ch.%s: %s ' % (k,tmp_diff)
+    return rem_loc_diff
+

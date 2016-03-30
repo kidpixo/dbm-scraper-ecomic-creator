@@ -36,6 +36,8 @@ STATUS : WTF? Is this useful?
 
 Step 3. Compare remote and locale lists
 
+STATUS : **DONE**
+
 Case:
 
 - remote.chapter.page == locale.chapter.page : do nothing.
