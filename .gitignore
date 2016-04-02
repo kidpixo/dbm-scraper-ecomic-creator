@@ -1,5 +1,6 @@
 # ignore the file in images/ folder wiht only digits in filename
 # gitignore files in each folder, see http://stackoverflow.com/a/5581995/1435167
+! images/error_downloading.png
 
 # Created by https://www.gitignore.io/api/osx,vim,python
 
