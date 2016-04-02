@@ -48,6 +48,7 @@ def locale_scraper(verbose=False):
     return chapter_dict
 
 def extract_digits(text):
+    import re
     m = re.match('.*?(\d{1,}).*?',text)
     if m:
         return m.group(1)
@@ -59,12 +60,20 @@ def extract_digits(text):
 def rem_loc_compare(rem_dict,loc_dict,verbose=False):
     rem_loc_diff = {}
     for k in rem_dict.keys():
-        loc_ch = [int(extract_digits(l)) for l in  loc_dict[k+'.cbz']]
-        tmp_diff = list(set(rem_dict[k])- set(loc_ch))
-        if len(tmp_diff) > 0:
-            rem_loc_diff[k] = tmp_diff
-            if verbose:
-                print 'remmote/locacle difference for ch.%s: %s ' % (k,tmp_diff)
+
+        # Check if loc_dict has the chapter / keys k!
+        if k+'.cbz' in loc_dict:
+        # do the rem vs loc comparison
+            loc_ch = [int(extract_digits(l)) for l in  loc_dict[k+'.cbz']]
+            tmp_diff = list(set(rem_dict[k])- set(loc_ch))
+            if len(tmp_diff) > 0:
+                rem_loc_diff[k] = tmp_diff
+                if verbose:
+                    print 'remmote/locacle difference for ch.%s: %s ' % (k,tmp_diff)
+        else:
+        # add all rem[k] to rem_diff
+            rem_loc_diff[k] = rem_dict[k]
+
     return rem_loc_diff
 
 
@@ -72,28 +81,78 @@ def download_remote(to_download):
 
     import requests
     import shutil
+    import os
 
-    for element in to_download:
+    to_download_flat = [item for sublist in rem_loc_diff.values() for item in sublist]
+    rem_down = {}
+    # don't need to flatten the list, add a iteritems on the rem_loc_diff
+    # and create a copy / modify it with the actual file dowloaded
+    for chapter,pages in to_download.iteritems():
+        pages_down = []
+        for page in pages:
 
-        filename = str(rem_loc_diff_flat[0]).zfill(4)
-        extension = '.png'
-        baseurl = 'http://www.dragonball-multiverse.com/en/pages/final/' + filename
+            filename = str(page).zfill(4)
 
-        res = requests.get(baseurl + extension, stream=True)
+            # test if file already exist
+            if ( os.path.isfile('images/'+str(filename)+'.png') | os.path.isfile('images/'+str(filename)+'.jpg') ):
+                extension =  '.jpg' if os.path.isfile('images/'+str(filename)+'.jpg') else '.png'
+                out_filename = filename+extension
+                print '%s already downloaded skippyng' % ( filename+extension )
 
-        try:
-            res.raise_for_status()
-        except Exception as exc:
-            print('Png file does not exist, tryng jpg. Error code : %s' % (exc))
-            del res
-            extension = '.jpg'
-            res = requests.get(baseurl + extension, stream=True)
+            else:
+                baseurl = 'http://www.dragonball-multiverse.com/en/pages/final/' + filename
 
-        with open('images/'+filename+extension, 'wb') as out_file:
-            shutil.copyfileobj(res.raw, out_file)
+                extension = '.png'
+                res = requests.get(baseurl + extension, stream=True)
+                try:
+                    res.raise_for_status()
+                    out_filename = filename+extension
+                except Exception as exc:
+                    print('Png file does not exist, tryng jpg. Error code : %s' % (exc))
+                    del res
+                    extension = '.jpg'
+                    res = requests.get(baseurl + extension, stream=True)
+                    try:
+                        res.raise_for_status()
+                        out_filename = filename+extension
+                    except Exception as exc:
+                        print('Png AND jpg file does not exist, skipping. Error code : %s' % (exc))
+                        del res
+                        out_filename = 'error_downloading.png'
 
-        print '%s downloaded and saved' % ( filename+extension )
-        del res
+                if 'error' not in out_filename :
+                    with open('images/'+filename+extension, 'wb') as out_file:
+                        shutil.copyfileobj(res.raw, out_file)
+                print '%s downloaded and saved' % ( filename+extension )
+
+            # build the actual downloaded file list
+            pages_down.append(out_filename)
+        # update the difference dictionary with the actual downloaded file list
+        to_download[chapter] = pages_down
+
+def cbz_assembler(rem_loc_diff_dict,verbose=False,remove=False):
+
+    import os
+    import zipfile
+
+    for ch in rem_loc_diff_dict.keys():
+        if not os.path.isfile('comics/%s.cbz' % ch) :
+            # create file based on rem[ch] list
+            mode='w'
+            if verbose:
+                print 'comics/%s.cbz does not exist, creating' % ch
+        else:
+            # append missing file from rem_loc_diff_dict[ch]
+            mode='a'
+            if verbose:
+                print 'comics/%s.cbz does exist, appending' % ch
+
+        with zipfile.ZipFile('comics/%s.cbz' % ch, mode=mode) as zf:
+            for page in rem_loc_diff_dict[ch]:
+                zf.write('images/'+page,compress_type=zipfile.ZIP_DEFLATED)
+                if remove:
+                    os.remove('images/'+page)
+                    print 'Deleting images/'+page
 
 ## Testing stuff
 
@@ -105,22 +164,9 @@ loc = locale_scraper(verbose=False)
 
 # compare the two
 rem_loc_diff = rem_loc_compare(rem,loc,verbose=True)
-print rem_loc_diff
-# {'51': [1161]}
-:w
 
-# flatten the dictionary of lists :
-rem_loc_diff_flat = [item for sublist in rem_loc_diff.values() for item in sublist]
+# this alter the rem_loc_diff dictionary with
+# the actual file to compress in the cbz
+download_remote(rem_loc_diff)
 
-download_remote(rem_loc_diff_flat)
-
-import os
-
-for ch in rem_loc_diff.keys():
-    print loc[k+'.cbz']
-    print rem[k]
-    if not os.path.isfile('images/%s.cbz' % k) :
-        create file based on rem[k] list
-    else:
-        append missing file from rem_loc_diff[k]
-
+cbz_assembler(rem_loc_diff,verbose=True,remove=True)
