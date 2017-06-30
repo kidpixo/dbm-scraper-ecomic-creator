@@ -1,7 +1,6 @@
 # ignore the file in images/ folder wiht only digits in filename
 # gitignore files in each folder, see http://stackoverflow.com/a/5581995/1435167
 # maybe we can distribute pre-made ens-of-chapter files?
-comics
 images/[0-9]*.*
 #! images/error_downloading.png
 
